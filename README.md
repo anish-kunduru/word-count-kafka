@@ -12,7 +12,7 @@ Count the Top 100 words in Moby Dick using the Confluent Platform.
    Ensure that all the services are up and operational by running `docker-compose ps`.
 2. Navigate to Control Center web interface at: http://localhost:9021/  
    Note that it might take a couple minutes for the Control Center to come online. 
-3. Run the moby-dick-producer project by stepping into the sub-directory and running `mvn clean install spring-boot:run`.
+3. Run the moby-dick-producer project by stepping into the sub-directory and running `mvn clean install spring-boot:run`. As data is produced to the topic, the program will output the number of words produced.
 4. From the Control Center, you may see the data being produced to the *wordCountInput* topic by navigating to **Topics** in the left pane and double-clicking the *wordCountInput* topic from the main pane. Navigate to the **INSPECT** tab to see data as it flows in.
    
 ### Stopping the Demo
