@@ -1,5 +1,8 @@
 package com.baeldung.spring.kafka;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,16 +32,27 @@ public class KafkaApplication {
         
         MessageProducer producer = context.getBean(MessageProducer.class);
 
-        /*
-         * Sending a Hello World message to topic 'baeldung'. 
-         * Must be recieved by both listeners with group foo
-         * and bar with containerFactory fooKafkaListenerContainerFactory
-         * and barKafkaListenerContainerFactory respectively.
-         * It will also be recieved by the listener with
-         * headersKafkaListenerContainerFactory as container factory
-         */
-        producer.sendMessage("Hello, World!");
+        InputStream is = new ClassPathResource("mobydick.txt").getInputStream();
+        BufferedInputStream bis = new BufferedInputStream(is);
+        Scanner scanner = new Scanner(bis);
 
+        long sentWordCount = 0L;
+        while (scanner.hasNext()){
+            String word = scanner.next().toLowerCase().replaceAll("[\\W]", "");
+            if (!word.isEmpty()) {
+                producer.sendMessage();
+                sentWordCount++;
+            }
+
+            if (sentWordCount % 1000 == 0){
+                System.out.println("Sent: " + sentWordCount + " messages.");
+            }
+        }
+        System.out.println("Sent: " + sentWordCount + " messages to kafka topic.");
+
+        scanner.close();
+        bis.close();
+        is.close();
         context.close();
     }
 
@@ -55,20 +70,7 @@ public class KafkaApplication {
         private String topicName;
 
         public void sendMessage(String message) {
-            
-            ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, "moby-dick", message);
-            
-            future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-
-                @Override
-                public void onSuccess(SendResult<String, String> result) {
-                    System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-                }
-                @Override
-                public void onFailure(Throwable ex) {
-                    System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-                }
-            });
+            kafkaTemplate.send(topicName, "moby-dick", message);
         }
     }
 }
