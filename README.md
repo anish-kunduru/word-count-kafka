@@ -22,3 +22,4 @@ Count the Top 100 words in Moby Dick using the Confluent Platform.
 The following were used to create this quick-n'-dirty demo:
 * https://docs.confluent.io/current/quickstart/ce-docker-quickstart.html
 * https://www.baeldung.com/spring-kafka
+* https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-messaging.html#boot-features-kafka

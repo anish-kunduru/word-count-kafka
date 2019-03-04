@@ -1,0 +1,7 @@
+{"namespace": "avro.wordcount",
+ "type": "record",
+ "name": "TopCounts",
+ "fields": [
+   {"name": "data", "type": {"type": "map", "values": "long"}}
+  ]
+}
