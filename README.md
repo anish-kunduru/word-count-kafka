@@ -14,6 +14,7 @@ Count the Top 100 words in Moby Dick using the Confluent Platform.
    Note that it might take a couple minutes for the Control Center to come online. 
 3. Run the moby-dick-producer project by stepping into the sub-directory and running `mvn clean install spring-boot:run`. As data is produced to the topic, the program will output the number of words produced.
 4. From the Control Center, you may see the data being produced to the *wordCountInput* topic by navigating to **Topics** in the left pane and double-clicking the *wordCountInput* topic from the main pane. Navigate to the **INSPECT** tab to see data as it flows in.
+5. Run the count-top-100 project by stepping into the sub-directory and running `mvn clean install spring-boot:run`. As data is produced to the topic, the program will output an Avro record containing a map to the *wordCountOutput* topic.
    
 ### Stopping the Demo
 1. To shut down docker processes and disconnect the volumes (flush data), `docker-compose down -v`.
