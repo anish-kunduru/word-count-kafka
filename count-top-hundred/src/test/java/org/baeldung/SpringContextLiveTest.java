@@ -121,7 +121,7 @@ public class SpringContextLiveTest {
         this.streamsBuilderFactoryBean.start();
         KafkaStreamsConfig kafkaStreamsConfig = new KafkaStreamsConfig();
         kafkaStreamsConfig.top100Results(streamsBuilderFactoryBean.getObject());
-        
+
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("dataInTopic", "false", embeddedKafka);
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

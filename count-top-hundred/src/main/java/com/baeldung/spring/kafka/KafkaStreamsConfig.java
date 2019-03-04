@@ -3,8 +3,10 @@ package com.baeldung.spring.kafka;
 import avro.wordcount.TopCounts;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -49,10 +51,28 @@ public class KafkaStreamsConfig {
         return new KafkaStreamsConfiguration(props);
     }
 
+    @Bean
+    KStream<String, Integer> rekeyedInputStream(StreamsBuilder streamsBuilder) {
+        KStream<String, String> rawInputStream = streamsBuilder.stream(inputTopic);
+        return rawInputStream.map((k, v) -> new KeyValue<>(v, 1));
+    }
 
     @Bean
-    public KTable<String, TopCounts> top100Results(StreamsBuilder kStreamBuilder) {
-        return null;
+    // NOTE: Since the input topic has a partition of 1, we know that we don't need to have an ending stateless operation.
+    // This would be stateless in-memory operation, since we would only have to hold the top 100 current records at that point.
+    // In order to do this, you'd have to have a final input stream partitioned by one and would likely hold internal state for the current min value (to know if one should be evicted).
+    public KTable<String, TopCounts> top100Results(StreamsBuilder streamBuilder) {
+        KTable<String, TopCounts> topCountsKTable = rekeyedInputStream(streamBuilder).groupByKey().aggregate(
+                () -> TopCounts.newBuilder().build(),
+                (key, newValue, oldValue) -> {
+                    Map<String, Long> data = oldValue.getData() == null ? new HashMap<>() : oldValue.getData();
+                    Long count = data.get(key);
+                    data.put(key, count == null ? newValue : count + newValue);
+                    return oldValue;
+                });
+
+        topCountsKTable.toStream().through(outputTopic);
+        return topCountsKTable;
     }
 
 }
