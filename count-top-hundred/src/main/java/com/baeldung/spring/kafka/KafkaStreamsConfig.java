@@ -11,18 +11,44 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 @Configuration
 @EnableKafka
 @EnableKafkaStreams
 public class KafkaStreamsConfig {
+
+    private static Set<String> STOP_WORDS = new HashSet<>();
+
+    static {
+        try {
+            InputStream is = new ClassPathResource("stop-words.txt").getInputStream();
+            BufferedInputStream bis = new BufferedInputStream(is);
+            Scanner scanner = new Scanner(bis);
+
+            while (scanner.hasNext()) {
+                String word = scanner.next().toLowerCase().replaceAll("[\\W]", "");
+                if (!word.isEmpty()) {
+                    STOP_WORDS.add(word);
+                }
+            }
+
+            scanner.close();
+            bis.close();
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Value(value = "${input.topic.name}")
     private String inputTopic;
@@ -54,7 +80,9 @@ public class KafkaStreamsConfig {
     @Bean
     KStream<String, Integer> rekeyedInputStream(StreamsBuilder streamsBuilder) {
         KStream<String, String> rawInputStream = streamsBuilder.stream(inputTopic);
-        return rawInputStream.map((k, v) -> new KeyValue<>(v, 1));
+        KStream<String, String> notStopWordsStream = rawInputStream.filterNot((k, v) -> STOP_WORDS.contains(v));
+
+        return notStopWordsStream.map((k, v) -> new KeyValue<>(v, 1));
     }
 
     @Bean
